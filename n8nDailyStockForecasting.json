@@ -1,0 +1,907 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1184,
+        -192
+      ],
+      "id": "3db9e2ee-4461-4b1d-b9bb-327bffcf90a9",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://api.twelvedata.com/time_series",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $json.symbol }}"
+            },
+            {
+              "name": "interval",
+              "value": "1min"
+            },
+            {
+              "name": "outputsize",
+              "value": "100"
+            },
+            {
+              "name": "apikey",
+              "value": "b474fb9679114c7eaecd04163aebc26a"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        256,
+        -96
+      ],
+      "id": "b22da6e2-f044-4ce7-91c4-1ef4caf51ead",
+      "name": "HTTP 1m"
+    },
+    {
+      "parameters": {
+        "url": "https://api.twelvedata.com/time_series",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $json.symbol }}"
+            },
+            {
+              "name": "interval",
+              "value": "15min"
+            },
+            {
+              "name": "outputsize",
+              "value": "100"
+            },
+            {
+              "name": "apikey",
+              "value": "b474fb9679114c7eaecd04163aebc26a"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        256,
+        32
+      ],
+      "id": "63f264f4-cd3f-4a07-8f0c-380e38f555ea",
+      "name": "HTTP 15m"
+    },
+    {
+      "parameters": {
+        "url": "https://api.twelvedata.com/time_series",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $json.symbol }}"
+            },
+            {
+              "name": "interval",
+              "value": "1h"
+            },
+            {
+              "name": "outputsize",
+              "value": "100"
+            },
+            {
+              "name": "apikey",
+              "value": "b474fb9679114c7eaecd04163aebc26a"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        256,
+        176
+      ],
+      "id": "3c0dbfca-8777-4479-ba2b-e668004c2e88",
+      "name": "HTTP 1H"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        720,
+        112
+      ],
+      "id": "278cd515-708b-4d07-b7aa-16b7efb1fcaf",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        928,
+        128
+      ],
+      "id": "4856666a-8e1d-4801-a1de-322b73d759ff",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "url": "https://newsapi.org/v2/everything",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "=q",
+              "value": "={{ $json.symbol }}"
+            },
+            {
+              "name": "from",
+              "value": "={{ $today.minus({ days:1 }).toFormat('yyyy-MM-dd') }}"
+            },
+            {
+              "name": "apikey",
+              "value": "2a9bfdba4ab644edb943d9d4769090a7"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        528
+      ],
+      "id": "cfbe161a-0703-437c-b8e3-418b0e52937c",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a highly intelligent and accurate sentiment analyzer specializing in the financial markets. Analyze the sentiment of the provided text\n\n-Evaluate the immediate market reaction, recent news impact, and technical volatility.\n\n-Determine a sentiment\n\ncategory: \"Positive\", \"Neutral\", or \"Negative\".\n\n-Calculate a numerical score between -1 (extremely negative) and 1 (extremely positive).\n\n-Provide a concise rationale explaining the short-term sentiment (give a detailed response with appropriate headlines for major\n\nYour output must be exactly a JSON object. The value must be an object with three keys \"category\", \"score\", and \"rationale\". Do not output any additional text.\n\nFor example, your output should look like:\n\n{\n\n\"shortTermSentiment\": {\n\n\"category\": \"Positive\",\n\n\"score\": 0.7,\n\n\"rationale\": \"....\"\n\n}\n\nNow, analyze the following text and produce your JSON output: \n\n {{ JSON.stringify($json.articles) }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        544,
+        528
+      ],
+      "id": "2a661d40-ae07-435a-9ac9-576e3e6f5844",
+      "name": "Message a model",
+      "retryOnFail": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "DyIc8F2Usys95JwF",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1344,
+        208
+      ],
+      "id": "090fc328-7562-413a-91c9-2462042ad7fa",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1552,
+        208
+      ],
+      "id": "f7d5ea36-1fcd-4311-b958-72c78f31d44f",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert day trader. Using the data below, please give a single, unified trade recommendation -Buy, Sell, or Hold-based on both price action (1m, 15m, 1h candles) and 24h sentiment. Then provide:\n\n-Technical Recommendation (Buy, Sell, or Hold; incorporating candle analysis and sentiment)\n-Entry Price\n-Stop-Loss\n-Target/Exit Price\n-Provide your answer as plain text with bullet points and clear line breaks.\n\nTechnical Data (candles):\n{{ JSON.stringify($json.data[0]) }}\n\nSentiment Analysis(past 24h): {{ JSON.stringify($json.data[1]) }} \n\n\nSteps for the agent:\n\n1. Group candles by timeframe (1m, 15m, 1h).\n2. Use 1m & 15m action + indicators (RSI, MACD, trendlines) for optimal entry.\n3. Confirm trend with 1h data.\n4. Factor in sentiment to refine the Buy/Sell/Hold call.\n\n### Response format (no extra text!):\n\nTechnical Recommendation: <BUY | SELL | HOLD>\n\nEntry Price: <number>\n\nStop-Loss: <number>\n\nTarget/Exit Price: <number>\n-Technical Recommendation: <BUY|SELL|HOLD>\n-Entry Price: <number>\n-Stop-Loss: <number>\n-Target/Exit Price: <number>",
+        "options": {
+          "systemMessage": "You are an expert day trader. ONLY output exactly the lines below-no rationale, no extra commentary.\n\n### Response format (absolutely no other text!)\n\n-Technical Recommendation:<BUY | SELL | HOLD>\n-Entry Price: <number or N/A>\n-Stop-Loss: <number or N/A>\n-Target/Exit: <number or N/A>\n-Hold or Exit Decision: <Hold| Exit>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1744,
+        208
+      ],
+      "id": "73b0bedf-26c7-45a6-b0d7-0dedcaee231f",
+      "name": "AI Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1744,
+        416
+      ],
+      "id": "e259a224-ae26-46d3-ae86-966de703e153",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "DyIc8F2Usys95JwF",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "beautify the all the text below into and HTML using inline CSS styling for an email. Format it like a modern newsletter, output only the results without any header elements.",
+              "role": "model"
+            },
+            {
+              "content": "={{ $json.final_prompt }}\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        560,
+        -272
+      ],
+      "id": "b671f782-c8e0-4192-af1e-c543b4adaa60",
+      "name": "Message a model1",
+      "retryOnFail": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "DyIc8F2Usys95JwF",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "ewalfredna70@gmail.com",
+        "subject": "=n8n Trade {{ $('Schedule Trigger').first().json['Readable date'] }}",
+        "message": "={{ $json.content.parts[0].text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        992,
+        -272
+      ],
+      "id": "af241eb3-9b47-4f71-a834-bb17faee32f3",
+      "name": "Send a message1",
+      "webhookId": "c3f8935d-141c-4729-b948-a99c62c25a5a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "6RGzHe24PPuaecou",
+          "name": "n8n test 1"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -448,
+        32
+      ],
+      "id": "1a5aac01-9af3-463f-89c6-6dbbab097530",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        224
+      ],
+      "id": "40664a93-2106-4e57-a26a-3e86cd790724"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  { \"symbol\": \"NVDA\" },\n  { \"symbol\": \"BTC\" },\n  { \"symbol\": \"ETH\" }, \n  { \"symbol\": \"TSLA\" },\n  { \"symbol\": \"AAPL\" }\n\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -688,
+        32
+      ],
+      "id": "2fbc9c39-87f8-4620-a1d1-55679d86a0af",
+      "name": "Code"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2128,
+        752
+      ],
+      "id": "2d73d1aa-267a-4abb-8262-2f53d2d92df0",
+      "name": "Wait",
+      "webhookId": "3e1b7e7e-0f3b-43b2-93dd-29bb8ce07db5"
+    },
+    {
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1R5e7M2DkdCFM6xemEEUVgwKugiBT5u-OjJJBd9PI3F4/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "keepFirstRow": true
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -928,
+        -16
+      ],
+      "id": "3a30bb1b-2557-4203-9b99-fd8fdbcbf215",
+      "name": "Clear sheet",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "qlCgt0xPS6SgSiBC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1R5e7M2DkdCFM6xemEEUVgwKugiBT5u-OjJJBd9PI3F4/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Summary": "={{ $json.output }}",
+            "Symbol": "={{ $('Code').item.json.symbol }}"
+          },
+          "matchingColumns": [
+            "Symbol"
+          ],
+          "schema": [
+            {
+              "id": "Symbol",
+              "displayName": "Symbol",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        2096,
+        208
+      ],
+      "id": "40b45a6f-4f09-4637-8c03-27b18e37df9a",
+      "name": "Append or update row in sheet",
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "qlCgt0xPS6SgSiBC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1R5e7M2DkdCFM6xemEEUVgwKugiBT5u-OjJJBd9PI3F4/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRangeA1",
+              "range": "A1:B"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        0,
+        -272
+      ],
+      "id": "e0da9277-d6a0-4ad2-af0b-c0c81e8c9ea8",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "qlCgt0xPS6SgSiBC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1184,
+        -16
+      ],
+      "id": "e012d208-6a1e-4e88-9043-cee42f0a510b",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        -208
+      ],
+      "id": "d86a948c-2648-4fc8-ad59-b66ff1f8696e",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mengambil semua item yang masuk (dalam kasus ini, 2 item dari Google Sheet)\nconst items = $items();\n\n// Menyiapkan teks awal untuk prompt\nlet combinedText = \"Berikut adalah ringkasan analisis saham hari ini:\\n\\n\";\n\n// Loop melalui setiap item untuk mengambil data Symbol dan Summary\nfor (const item of items) {\n  const symbol = item.json.Symbol;\n  const summary = item.json.Summary;\n  \n  // Menambahkan data dari setiap item ke dalam teks gabungan\n  combinedText += `--- Saham: ${symbol} ---\\n${summary}\\n\\n`;\n}\n\n// Mengembalikan SATU item baru yang berisi seluruh teks yang sudah digabung\nreturn [{ json: { final_prompt: combinedText } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        -272
+      ],
+      "id": "d567e78e-65f2-4aa2-bb75-912b61f43029",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "url": "https://api.twelvedata.com/time_series",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "symbol",
+              "value": "={{ $json.symbol }}"
+            },
+            {
+              "name": "interval",
+              "value": "1h"
+            },
+            {
+              "name": "outputsize",
+              "value": "1000"
+            },
+            {
+              "name": "apikey",
+              "value": "b474fb9679114c7eaecd04163aebc26a"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        256,
+        336
+      ],
+      "id": "25268046-d8dc-4525-9506-bf09ffc7b969",
+      "name": "HTTP 1HD"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Clear sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP 15m": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP 1m": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP 1H": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "HTTP 1m",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP 15m",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP 1H",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP 1HD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear sheet": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Clear sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        []
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP 1HD": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "08f4babd-a52b-49bf-8012-ec680053928c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8fd833763f31c2129bf3f5d7d908f41a7eae4c2f59b9d965f65d1e10a14c31b6"
+  },
+  "id": "tuHe7LyrwghbkJsE",
+  "tags": []
+}
